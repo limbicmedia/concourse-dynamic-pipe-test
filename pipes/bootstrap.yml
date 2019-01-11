@@ -1,0 +1,69 @@
+---
+
+# Boostrap Pipeline
+# Creates other unique pipelines on change detection
+#
+# Update from CLI:
+# fly -t limbic set-pipeline -p cdpt-bootstrap -c bootstrap.yml --load-vars-from ../credentials.yml
+#
+
+resource_types:
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+
+
+resources:
+- name: repo
+  type: git
+  source:
+    uri: {{github-uri}}
+    branch: {{github-branch}}
+    paths:
+      - pipes
+
+###
+# Github, Release, and Pull Request resources
+###
+#- name: git-pr
+#  type: pull-request
+#  check_every: 24h
+#  webhook_token: {{webhook-token}}
+#  source:
+#    repository: {{github-uri}}
+#    access_token: {{github-access-token}}
+
+###
+# Docker images
+###
+- name: alpine-node
+  type: docker-image
+  source:
+    repository: mhart/alpine-node
+    tag: latest
+
+jobs:
+- name: test
+  plan:
+  - get: repo
+    trigger: true
+  - get: alpine-node
+    params: {save: true}
+  - task: run-test
+    params:
+      skip_download: true
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: mhart/alpine-node
+          tag: latest
+      run:
+        path: sh
+        args:
+          - -exc
+          - |
+            touch hello
+            echo "here we are" > hello
