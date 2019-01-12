@@ -26,13 +26,13 @@ resources:
 ###
 # Github, Release, and Pull Request resources
 ###
-#- name: git-pr
-#  type: pull-request
-#  check_every: 24h
-#  webhook_token: {{webhook-token}}
-#  source:
-#    repository: {{github-uri}}
-#    access_token: {{github-access-token}}
+- name: git-pr
+  type: pull-request
+  check_every: 24h
+  webhook_token: {{webhook-token}}
+  source:
+    repository: {{github-uri}}
+    access_token: {{github-access-token}}
 
 ###
 # Docker images
@@ -47,6 +47,8 @@ jobs:
 - name: test
   plan:
   - get: repo
+    trigger: true
+  - get: git-pr
     trigger: true
   - get: alpine-node
     params: {save: true}
