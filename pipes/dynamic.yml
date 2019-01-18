@@ -3,6 +3,13 @@
 # Dynamic Pipeline
 # This pipeline should not be set from terminal; it is scaffolded and updated via ./boostrap.yml.
 #
+# 2 types of variable substitutions are used here:
+# 
+# - ((vault-variable)): static, unchanging, global variables
+# - {{local-variable}}: dynamic branch- or pipe-specific variables
+# 
+# Local variables should only be used in non-secure areas, like a branch name.
+# Local variables should not be tokens, keys, passwords, etc.
 
 resources:
 ###
@@ -11,16 +18,16 @@ resources:
 - name: repo
   type: git
   source:
-    uri: {{github-uri}}
-    branch: {{github-branch}}
+    uri: https://((github-access-token))@github.com/limbicmedia/concourse-dynamic-pipe-test.git
+    #branch: {{github-branch}}
 
 - name: git-pr
   type: pull-request
   check_every: 24h
-  webhook_token: {{webhook-token}}
+  webhook_token: ((github-access-token))
   source:
     repository: limbicmedia/concourse-dynamic-pipe-test
-    access_token: {{github-access-token}}
+    access_token: ((github-access-token))
 
 ###
 # Docker images

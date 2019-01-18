@@ -94,22 +94,40 @@ jobs:
             apk add jq --update --no-cache
 
             cat ./git-pr/.git/resource/version.json | jq
-
-            PIPELINE_NAME=cdpt-pr-$(cat ./git-pr/.git/resource/version.json | jq .pr -r)
-
+            
             mkdir -p ./task-output
 
-            echo $PIPELINE_NAME > ./task-output/pipeline-name
+            PIPELINE_NAME=cdpt-pr-$(cat ./git-pr/.git/resource/version.json | jq .pr -r)
+            echo "pipeline-name: $PIPELINE_NAME" >> ./task-output/pipeline-vars
+
+
+            
+
+            cat > task-output/pipeline-file <<EOF
+            pipelines:
+              - name: $PIPELINE_NAME
+                team: main
+                paused: true
+                config_file: git-pr/pipes/dynamic.yml
+                vars_files:
+                  - task-output/pipeline-vars
+            EOF
+
+            cat ./task-output/pipeline-file
+
+            cat ./task-output/pipeline-vars
+
+
   - put: my-pipelines
     params:
-      pipelines_file: repo/pipes/dynamic.yml
+      pipelines_file: task-output/pipeline-file
       #pipelines:
       #  - name: cdpt-dynamic
-          #team: main
-          #paused: true
-          #config_file: repo/pipes/dynamic.yml
-          #vars_files:
-          #  - task-output/credentials.yml
+      #    team: main
+      #    paused: true
+      #    config_file: git-pr/pipes/dynamic.yml
+      #    vars_files:
+      #      - task-output/pipeline-vars
 
 
 
