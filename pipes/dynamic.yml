@@ -19,7 +19,6 @@ resources:
   type: git
   source:
     uri: https://((github-access-token))@github.com/limbicmedia/concourse-dynamic-pipe-test.git
-    #branch: {{github-branch}}
 
 - name: git-pr
   type: pull-request
