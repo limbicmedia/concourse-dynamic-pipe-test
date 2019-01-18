@@ -5,8 +5,8 @@
 #
 # 2 types of variable substitutions are used here:
 # 
-# - ((vault-variable)): static, unchanging, global variables
-# - {{local-variable}}: dynamic branch- or pipe-specific variables
+# - ( ( vault-variable ) ): static, unchanging, global variables
+# - { { local-variable } }: dynamic branch- or pipe-specific variables
 # 
 # Local variables should only be used in non-secure areas, like a branch name.
 # Local variables should not be tokens, keys, passwords, etc.
