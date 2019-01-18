@@ -13,8 +13,15 @@ resource_types:
   source:
     repository: teliaoss/github-pr-resource
 
+- name: concourse-pipeline
+  type: docker-image
+  source:
+    repository: concourse/concourse-pipeline-resource
 
 resources:
+###
+# Github, Release, and Pull Request resources
+###
 - name: repo
   type: git
   source:
@@ -23,15 +30,12 @@ resources:
     paths:
       - pipes
 
-###
-# Github, Release, and Pull Request resources
-###
 - name: git-pr
   type: pull-request
   check_every: 24h
   webhook_token: {{webhook-token}}
   source:
-    repository: {{github-uri}}
+    repository: limbicmedia/concourse-dynamic-pipe-test
     access_token: {{github-access-token}}
 
 ###
@@ -43,11 +47,26 @@ resources:
     repository: mhart/alpine-node
     tag: latest
 
+###
+# Concourse pipeline resources
+###
+
+- name: my-pipelines
+  type: concourse-pipeline
+  source:
+    target: https://ci.limbicmedia.ca
+    insecure: "false"
+    teams:
+      - name: main
+        username: limbic
+        password: bGltYmlj
+
+
 jobs:
 - name: test
   plan:
   - get: repo
-    trigger: true
+    trigger: false
   - get: git-pr
     trigger: true
   - get: alpine-node
@@ -62,10 +81,38 @@ jobs:
         source:
           repository: mhart/alpine-node
           tag: latest
+      inputs:
+        - name: repo
+        - name: git-pr
+      outputs:
+        - name: task-output
       run:
         path: sh
         args:
           - -exc
           - |
-            touch hello
-            echo "here we are" > hello
+            apk add jq --update --no-cache
+
+            cat ./git-pr/.git/resource/version.json | jq
+
+            PIPELINE_NAME=cdpt-pr-$(cat ./git-pr/.git/resource/version.json | jq .pr -r)
+
+            mkdir -p ./task-output
+
+            echo $PIPELINE_NAME > ./task-output/pipeline-name
+  - put: my-pipelines
+    params:
+      pipelines_file: repo/pipes/dynamic.yml
+      #pipelines:
+      #  - name: cdpt-dynamic
+          #team: main
+          #paused: true
+          #config_file: repo/pipes/dynamic.yml
+          #vars_files:
+          #  - task-output/credentials.yml
+
+
+
+
+
+

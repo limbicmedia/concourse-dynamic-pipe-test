@@ -1,0 +1,64 @@
+---
+
+# Dynamic Pipeline
+# This pipeline should not be set from terminal; it is scaffolded and updated via ./boostrap.yml.
+#
+
+resources:
+###
+# Github, Release, and Pull Request resources
+###
+- name: repo
+  type: git
+  source:
+    uri: {{github-uri}}
+    branch: {{github-branch}}
+
+- name: git-pr
+  type: pull-request
+  check_every: 24h
+  webhook_token: {{webhook-token}}
+  source:
+    repository: limbicmedia/concourse-dynamic-pipe-test
+    access_token: {{github-access-token}}
+
+###
+# Docker images
+###
+- name: alpine-node
+  type: docker-image
+  source:
+    repository: mhart/alpine-node
+    tag: latest
+
+###
+# Concourse pipeline resources
+###
+
+jobs:
+- name: test
+  plan:
+  - get: repo
+    trigger: false
+  - get: alpine-node
+    params: {save: true}
+  - task: echo-changes
+    params:
+      skip_download: true
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: mhart/alpine-node
+          tag: latest
+      inputs:
+        - name: repo
+      run:
+        path: sh
+        args:
+          - -exc
+          - |
+            find .
+            cat repo/CHANGES.md
+
