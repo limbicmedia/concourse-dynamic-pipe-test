@@ -46,6 +46,8 @@ jobs:
   plan:
   - get: repo
     trigger: false
+  - get: git-pr
+    trigger: false  
   - get: alpine-node
     params: {save: true}
   - task: echo-changes
